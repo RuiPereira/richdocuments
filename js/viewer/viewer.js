@@ -217,10 +217,12 @@ var odfViewer = {
 					);
 				},
 
-				_createDocumentFromTemplate: function(mimetype, filename) {
+				_createDocumentFromTemplate: function(templateId, mimetype, filename) {
 					OCA.Files.Files.isFileNameValid(filename);
 					filename = FileList.getUniqueName(filename);
 
+					// TODO: use templateId to create the file from the template
+					console.log('TODO: Create a new file from template ' + templateId);
 					$.post(
 						OC.generateUrl('apps/richdocuments/ajax/documents/create'),
 						{ mimetype : mimetype, filename: filename, dir: $('#dir').val() },
@@ -248,6 +250,14 @@ var odfViewer = {
 									click: function() {
 										$(this).ocdialog('close');
 									}
+								}, {
+									text: t('core', 'Create'),
+									classes: 'primary',
+									click: function() {
+										var templateId = this.dataset.templateId;
+										self._createDocumentFromTemplate(templateId, mimetype, filename);
+										$(this).ocdialog('close');
+									}
 								}];
 			
 								$('#template-picker').ocdialog({
@@ -270,6 +280,9 @@ var odfViewer = {
 							default_name: t('richdocuments','Empty file')
 						});
 
+						$dlg[0].querySelector('.default').onclick = function() {
+							$dlg[0].dataset.templateId = undefined;
+						};
 						// create templates list
 						var templates = _.values(data)
 						templates.forEach(function(template) {
@@ -281,11 +294,14 @@ var odfViewer = {
 				},
 
 				_appendTemplateFromData: function(dlg, data) {
-					console.log(data);
+					var self = this;
 					var template = dlg.querySelector('.template-model').cloneNode(true);
 					template.className = '';
 					template.querySelector('img').src = data.preview;
 					template.querySelector('h2').textContent = data.name;
+					template.onclick = function() {
+						dlg.dataset.templateId = data.id;
+					};
 				
 					dlg.querySelector('.template-container').appendChild(template);
 				}
